@@ -1,0 +1,53 @@
+﻿@page "/account/edit/{AccountId:int?}"
+@using AccountManager.Dto
+@inject NavigationManager NavigationManager
+@inject AccountManager.Services.AccountApiService AccountApiService
+
+<h3>@(IsEditMode ? "Edit Account" : "Create Account")</h3>
+
+<EditForm Model="account" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label class="form-label">Company Name:</label>
+        <InputText class="form-control" @bind-Value="account.CompanyName" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Is Active:</label>
+        <InputCheckbox class="form-check-input" @bind-Value="isActive" />
+    </div>
+    <button type="submit" class="btn btn-success">Save</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? AccountId { get; set; }
+
+    private AccountDto account = new();
+    private bool isActive;
+
+    private bool IsEditMode => AccountId.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            account = await AccountApiService.GetAccountByIdAsync(AccountId.Value);
+            isActive = account.IsActive == 1;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        account.IsActive = isActive ? 1 : 0;
+        if (IsEditMode)
+        {
+            await AccountApiService.UpdateAccountAsync(AccountId.Value, account);
+        }
+        else
+        {
+            await AccountApiService.CreateAccountAsync(account);
+        }
+        NavigationManager.NavigateTo("/accounts");
+    }
+}

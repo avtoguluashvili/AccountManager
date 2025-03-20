@@ -1,0 +1,32 @@
+﻿@page "/accounts"
+@using AccountManager.Dto
+@inject AccountManager.Services.AccountApiService AccountApiService
+
+<h3>Accounts</h3>
+
+@if (accounts is null)
+{
+    <p>Loading accounts...</p>
+}
+else if (!accounts.Any())
+{
+    <p>No accounts found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var account in accounts)
+        {
+            <li>@account.CompanyName</li>
+        }
+    </ul>
+}
+
+@code {
+    private IEnumerable<AccountDto>? accounts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = await AccountApiService.GetAccountsAsync("");
+    }
+}
