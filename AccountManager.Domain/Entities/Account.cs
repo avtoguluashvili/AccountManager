@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace AccountManager.Domain.Entities
@@ -10,7 +11,6 @@ namespace AccountManager.Domain.Entities
 
         [MaxLength(128)]
         public string Token { get; set; } = Guid.NewGuid().ToString();
-
         public int IsActive { get; set; } = 0;
 
         [MaxLength(100)]
@@ -20,7 +20,6 @@ namespace AccountManager.Domain.Entities
         public string? Country { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public AccountSubscription? AccountSubscription { get; set; }
 
         public bool Is2FAEnabled { get; set; }
         public bool IsIPFilterEnabled { get; set; }
@@ -29,5 +28,6 @@ namespace AccountManager.Domain.Entities
 
         [MaxLength(100)]
         public string? LocalTimeZone { get; set; }
+        public virtual ICollection<AccountSubscription> AccountSubscriptions { get; set; } = new List<AccountSubscription>();
     }
 }

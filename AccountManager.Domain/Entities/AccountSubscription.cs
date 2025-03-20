@@ -1,31 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using AccountManager.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
-namespace AccountManager.Domain.Entities
+public class AccountSubscription
 {
-    public class AccountSubscription
-    {
-        [Key]
-        public int AccountSubscriptionId { get; set; }
+    [Key]
+    public int AccountSubscriptionId { get; set; }
 
-        public int SubscriptionId { get; set; }
+    public int SubscriptionId { get; set; }
+    public virtual Subscription Subscription { get; set; }
 
-        // Navigation property to the related Subscription
-        public Subscription Subscription { get; set; }
+    public int AccountId { get; set; }
+    public virtual Account Account { get; set; }
 
-        public int AccountId { get; set; }
+    public int SubscriptionStatusId { get; set; }
+    public virtual AccountSubscriptionStatus AccountSubscriptionStatus { get; set; }
 
-        // Navigation property to the related Account
-        public Account Account { get; set; }
-
-        [ForeignKey("AccountSubscriptionStatus")]
-        public int SubscriptionStatusId { get; set; }
-
-        // Navigation property to the related Subscription Status
-        public AccountSubscriptionStatus AccountSubscriptionStatus { get; set; }
-
-        public bool Is2FAAllowed { get; set; }
-        public bool IsIPFilterAllowed { get; set; }
-        public bool IsSessionTimeoutAllowed { get; set; }
-    }
+    public bool Is2FAAllowed { get; set; }
+    public bool IsIPFilterAllowed { get; set; }
+    public bool IsSessionTimeoutAllowed { get; set; }
 }

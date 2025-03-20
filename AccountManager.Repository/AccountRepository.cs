@@ -15,16 +15,12 @@ namespace AccountManager.Repository
 
         public async Task<IEnumerable<Account>> GetAllAsync()
         {
-            return await _context.Accounts
-                .Include(a => a.AccountSubscription)
-                .ToListAsync();
+            return await _context.Accounts.ToListAsync();
         }
 
-        public async Task<Account?> GetByIdAsync(int accountId)
+        public async Task<Account?> GetByIdAsync(int id)
         {
-            return await _context.Accounts
-                .Include(a => a.AccountSubscription)
-                .FirstOrDefaultAsync(a => a.AccountId == accountId);
+            return await _context.Accounts.FindAsync(id);
         }
 
         public async Task<Account> CreateAsync(Account account)
@@ -40,13 +36,20 @@ namespace AccountManager.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> DeleteAsync(int accountId)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var account = await GetByIdAsync(accountId);
+            var account = await GetByIdAsync(id);
             if (account == null) return false;
 
             _context.Accounts.Remove(account);
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<IEnumerable<Account>> SearchAsync(string query)
+        {
+            return await _context.Accounts
+                .Where(a => a.CompanyName.Contains(query))
+                .ToListAsync();
         }
     }
 }

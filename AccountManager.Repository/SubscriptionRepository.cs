@@ -18,15 +18,29 @@ namespace AccountManager.Repository
             return await _context.Subscriptions.ToListAsync();
         }
 
-        public async Task<Subscription?> GetByIdAsync(int subscriptionId)
+        public async Task<Subscription?> GetByIdAsync(int id)
         {
-            return await _context.Subscriptions
-                .FirstOrDefaultAsync(s => s.SubscriptionId == subscriptionId);
+            return await _context.Subscriptions.FindAsync(id);
+        }
+
+        public async Task CreateAsync(Subscription subscription)
+        {
+            _context.Subscriptions.Add(subscription);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> UpdateAsync(Subscription subscription)
         {
             _context.Subscriptions.Update(subscription);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var subscription = await GetByIdAsync(id);
+            if (subscription == null) return false;
+
+            _context.Subscriptions.Remove(subscription);
             return await _context.SaveChangesAsync() > 0;
         }
     }

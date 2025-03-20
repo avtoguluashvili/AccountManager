@@ -2,50 +2,98 @@
 using AccountManager.Dto;
 using AccountManager.Interfaces.Repositories;
 using AccountManager.Interfaces.Services;
-using AutoMapper;
 
 namespace AccountManager.Services
 {
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
-        private readonly IMapper _mapper;
 
-        public AccountService(IAccountRepository accountRepository, IMapper mapper)
+        public AccountService(IAccountRepository accountRepository)
         {
             _accountRepository = accountRepository;
-            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<AccountDto>> GetAllAccountsAsync()
+        public async Task<IEnumerable<AccountDto>> GetAllAsync()
         {
             var accounts = await _accountRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<AccountDto>>(accounts);
+            return accounts.Select(a => new AccountDto
+            {
+                AccountId = a.AccountId,
+                CompanyName = a.CompanyName,
+                IsActive = a.IsActive,
+                Token = a.Token
+            });
         }
 
-        public async Task<AccountDto?> GetAccountByIdAsync(int accountId)
+        public async Task<IEnumerable<AccountDto>> SearchAccountsAsync(string query)
         {
-            var account = await _accountRepository.GetByIdAsync(accountId);
-            return account is null ? null : _mapper.Map<AccountDto>(account);
+            var accounts = await _accountRepository.SearchAsync(query);
+            return accounts.Select(a => new AccountDto
+            {
+                AccountId = a.AccountId,
+                CompanyName = a.CompanyName,
+                IsActive = a.IsActive,
+                Token = a.Token
+            });
         }
 
-        public async Task<AccountDto> CreateAccountAsync(AccountDto accountDto)
+        public async Task<AccountDto?> GetByIdAsync(int id)
         {
-            var accountEntity = _mapper.Map<Account>(accountDto);
-            var createdAccount = await _accountRepository.CreateAsync(accountEntity);
-            return _mapper.Map<AccountDto>(createdAccount);
+            var account = await _accountRepository.GetByIdAsync(id);
+            if (account == null) return null;
+
+            return new AccountDto
+            {
+                AccountId = account.AccountId,
+                CompanyName = account.CompanyName,
+                IsActive = account.IsActive,
+                Token = account.Token
+            };
         }
 
-        public async Task<bool> UpdateAccountAsync(int accountId, AccountDto accountDto)
+        public async Task<AccountDto> CreateAsync(AccountDto accountDto)
         {
-            var accountEntity = _mapper.Map<Account>(accountDto);
-            accountEntity.AccountId = accountId;
-            return await _accountRepository.UpdateAsync(accountEntity);
+            var newAccount = new Account
+            {
+                CompanyName = accountDto.CompanyName,
+                IsActive = accountDto.IsActive,
+                Token = Guid.NewGuid().ToString()
+            };
+
+            await _accountRepository.CreateAsync(newAccount);
+            return new AccountDto
+            {
+                AccountId = newAccount.AccountId,
+                CompanyName = newAccount.CompanyName,
+                IsActive = newAccount.IsActive,
+                Token = newAccount.Token
+            };
         }
 
-        public async Task<bool> DeleteAccountAsync(int accountId)
+        public async Task<bool> UpdateAsync(AccountDto accountDto)
         {
-            return await _accountRepository.DeleteAsync(accountId);
+            var account = await _accountRepository.GetByIdAsync(accountDto.AccountId);
+            if (account == null) return false;
+
+            account.CompanyName = accountDto.CompanyName;
+            account.IsActive = accountDto.IsActive;
+
+            return await _accountRepository.UpdateAsync(account);
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            return await _accountRepository.DeleteAsync(id);
+        }
+
+        public async Task<bool> ToggleIsActiveAsync(int id)
+        {
+            var account = await _accountRepository.GetByIdAsync(id);
+            if (account == null) return false;
+
+            account.IsActive = account.IsActive == 1 ? 0 : 1;
+            return await _accountRepository.UpdateAsync(account);
         }
     }
 }

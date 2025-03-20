@@ -1,6 +1,6 @@
-using AccountManager.Dto;
-using AccountManager.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+using AccountManager.Interfaces.Services;
+using AccountManager.Dto;
 
 namespace AccountManager.API.Controllers
 {
@@ -16,51 +16,76 @@ namespace AccountManager.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AccountDto>>> GetAllAccounts()
+        public async Task<ActionResult<IEnumerable<AccountDto>>> GetAll()
         {
-            var accounts = await _accountService.GetAllAccountsAsync();
+            var accounts = await _accountService.GetAllAsync();
             return Ok(accounts);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<AccountDto>> GetAccountById(int id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AccountDto>> GetById(int id)
         {
-            var account = await _accountService.GetAccountByIdAsync(id);
-            if (account == null)
-                return NotFound();
-
+            var account = await _accountService.GetByIdAsync(id);
+            if (account == null) return NotFound();
             return Ok(account);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<AccountDto>> CreateAccount([FromBody] AccountDto accountDto)
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<AccountDto>>> SearchAccounts([FromQuery] string query)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var accounts = await _accountService.SearchAccountsAsync(query);
+            if (accounts == null || !accounts.Any())
+                return NotFound("No matching accounts found.");
 
-            var createdAccount = await _accountService.CreateAccountAsync(accountDto);
-            return CreatedAtAction(nameof(GetAccountById), new { id = createdAccount.AccountId }, createdAccount);
+            return Ok(accounts);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateAccount(int id, [FromBody] AccountDto accountDto)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] AccountDto accountDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            var updated = await _accountService.UpdateAccountAsync(id, accountDto);
-            if (!updated)
-                return NotFound();
+                var createdAccount = await _accountService.CreateAsync(accountDto);
+                return CreatedAtAction(nameof(GetById), new { id = createdAccount.AccountId }, createdAccount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating account: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, AccountDto accountDto)
+        {
+            if (id != accountDto.AccountId) return BadRequest();
+
+            var updated = await _accountService.UpdateAsync(accountDto);
+            if (!updated) return NotFound();
 
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteAccount(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _accountService.DeleteAccountAsync(id);
-            if (!deleted)
-                return NotFound();
+            var deleted = await _accountService.DeleteAsync(id);
+            if (!deleted) return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/toggle")]
+        public async Task<IActionResult> ToggleIsActive(int id)
+        {
+            var updated = await _accountService.ToggleIsActiveAsync(id);
+            if (!updated) return NotFound();
 
             return NoContent();
         }
