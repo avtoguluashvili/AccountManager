@@ -59,7 +59,6 @@
         try
         {
             _subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
-            // pick default subscription if one is flagged IsDefault
             if (_subscriptions != null && _subscriptions.Any(x => x.IsDefault))
             {
                 _selectedSubscriptionId = _subscriptions.First(x => x.IsDefault).SubscriptionId;

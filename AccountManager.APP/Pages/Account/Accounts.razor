@@ -66,12 +66,11 @@
 </div>
 
 @code {
-    private List<Account>? _accounts; // The raw data from the server
-    private List<Account>? _displayedAccounts; // The filtered/sorted subset
+    private List<Account>? _accounts;
+    private List<Account>? _displayedAccounts;
     private string _searchTerm = "";
     private string _errorMessage = "";
 
-    // Sorting state
     private string _sortColumn = nameof(Account.AccountId);
     private bool _sortAscending = true;
 
@@ -137,13 +136,11 @@
 
         IEnumerable<Account> query = _accounts;
 
-        // 1) Filter
         if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
             query = query.Where(a => a.CompanyName.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
-        // 2) Sort
         query = _sortColumn switch
         {
             nameof(Account.CompanyName) => _sortAscending
@@ -152,7 +149,7 @@
             nameof(Account.IsActive) => _sortAscending
                 ? query.OrderBy(a => a.IsActive)
                 : query.OrderByDescending(a => a.IsActive),
-            _ => // default sort by AccountId
+            _ =>
                 _sortAscending
                     ? query.OrderBy(a => a.AccountId)
                     : query.OrderByDescending(a => a.AccountId)
@@ -165,12 +162,9 @@
     {
         return builder =>
         {
-            if (_sortColumn == column)
-            {
-                // if current column is sorted, show arrow
-                var icon = _sortAscending ? "▲" : "▼";
-                builder.AddContent(0, icon);
-            }
+            if (_sortColumn != column) return;
+            var icon = _sortAscending ? "▲" : "▼";
+            builder.AddContent(0, icon);
         };
     }
 

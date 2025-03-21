@@ -8,7 +8,6 @@ public class SubscriptionRepository(ApplicationDbContext db) : ISubscriptionRepo
 {
     public async Task<List<Subscription>> GetAllAsync()
     {
-        // No-tracking for read queries
         return await db.Subscriptions
             .AsNoTracking()
             .ToListAsync();
@@ -30,7 +29,6 @@ public class SubscriptionRepository(ApplicationDbContext db) : ISubscriptionRepo
 
     public async Task<Subscription> UpdateAsync(Subscription subscription)
     {
-        // Attach the incoming subscription so we can update it
         db.Subscriptions.Attach(subscription);
         db.Entry(subscription).State = EntityState.Modified;
 

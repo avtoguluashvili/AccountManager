@@ -113,11 +113,8 @@
     {
         try
         {
-            // Load account
             _account = await Http.GetFromJsonAsync<Account>($"api/Accounts/{Id}");
-            // Load all subscriptions
             _subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
-            // Load subscription statuses
             _statuses = await Http.GetFromJsonAsync<List<AccountSubscriptionStatus>>("api/AccountSubscriptionStatus");
         }
         catch (Exception ex)

@@ -115,13 +115,11 @@
         if (_logs == null) return;
         IEnumerable<AccountChangesLog> query = _logs;
 
-        // Filter
         if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
             query = query.Where(l => l.ChangedField.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Sort
         query = _sortColumn switch
         {
             nameof(AccountChangesLog.AccountId) => _sortAscending
@@ -133,7 +131,7 @@
             nameof(AccountChangesLog.Timestamp) => _sortAscending
                 ? query.OrderBy(l => l.Timestamp)
                 : query.OrderByDescending(l => l.Timestamp),
-            _ => // default: LogId
+            _ =>
                 _sortAscending
                     ? query.OrderBy(l => l.LogId)
                     : query.OrderByDescending(l => l.LogId)
@@ -146,11 +144,9 @@
     {
         return builder =>
         {
-            if (_sortColumn == column)
-            {
-                var icon = _sortAscending ? "▲" : "▼";
-                builder.AddContent(0, icon);
-            }
+            if (_sortColumn != column) return;
+            var icon = _sortAscending ? "▲" : "▼";
+            builder.AddContent(0, icon);
         };
     }
 

@@ -125,13 +125,11 @@
         if (_subscriptions == null) return;
         IEnumerable<Subscription> query = _subscriptions;
 
-        // Filter
         if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
             query = query.Where(s => s.Description.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Sort
         query = _sortColumn switch
         {
             nameof(Subscription.Description) => _sortAscending
@@ -140,7 +138,7 @@
             nameof(Subscription.IsDefault) => _sortAscending
                 ? query.OrderBy(s => s.IsDefault)
                 : query.OrderByDescending(s => s.IsDefault),
-            _ => // SubscriptionId
+            _ => 
                 _sortAscending
                     ? query.OrderBy(s => s.SubscriptionId)
                     : query.OrderByDescending(s => s.SubscriptionId)
@@ -153,11 +151,9 @@
     {
         return builder =>
         {
-            if (_sortColumn == column)
-            {
-                var icon = _sortAscending ? "▲" : "▼";
-                builder.AddContent(0, icon);
-            }
+            if (_sortColumn != column) return;
+            var icon = _sortAscending ? "▲" : "▼";
+            builder.AddContent(0, icon);
         };
     }
 
