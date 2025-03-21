@@ -2,19 +2,20 @@
 
 namespace AccountManager.Domain.Entities
 {
+    /// <summary>
+    ///     Represents the status of an account's subscription (e.g., Active, Cancelled, etc.).
+    /// </summary>
     public class AccountSubscriptionStatus
     {
+        /// <summary>
+        ///     Primary key for the SubscriptionStatus table.
+        /// </summary>
         [Key]
         public int SubscriptionStatusId { get; set; }
 
-        public string Description { get; set; }
-
-        public bool IsDefault { get; set; }
-
-        public bool IsActive { get; set; }
-
-        public bool IsCancelled { get; set; }
-
-        public bool IsDeleted { get; set; }
+        /// <summary>
+        ///     Descriptive name of the status (e.g. "Active", "Cancelled").
+        /// </summary>
+        public string Description { get; set; } = string.Empty;
     }
 }

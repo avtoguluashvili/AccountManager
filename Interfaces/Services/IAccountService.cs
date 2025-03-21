@@ -1,15 +1,16 @@
-﻿using AccountManager.Dto;
-
+﻿
 namespace AccountManager.Interfaces.Services
 {
+    /// <summary>
+    ///     Business logic for managing Account and subscription changes.
+    /// </summary>
     public interface IAccountService
     {
-        Task<IEnumerable<AccountDto>> GetAllAsync();
-        Task<AccountDto?> GetByIdAsync(int id);
-        Task<AccountDto> CreateAsync(AccountDto accountDto);
-        Task<bool> UpdateAsync(AccountDto accountDto);
-        Task<bool> DeleteAsync(int id);
-        Task<bool> ToggleIsActiveAsync(int id);
-        Task<IEnumerable<AccountDto>> SearchAccountsAsync(string query); // New method
+        Task<List<Account>> GetAllAsync();
+        Task<Account?> GetByIdAsync(int id);
+        Task<Account> CreateAsync(Account newAccount, int subscriptionId);
+        Task<Account> UpdateAsync(Account updatedAccount);
+        Task DeleteAsync(int accountId);
+        Task<List<Account>> SearchAsync(string keyword);
     }
 }

@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AccountManager.Domain\AccountManager.Domain.csproj" />
-    <ProjectReference Include="..\AccountManager.Dto\AccountManager.Dto.csproj" />
   </ItemGroup>
 
 </Project>

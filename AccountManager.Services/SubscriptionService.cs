@@ -1,100 +1,37 @@
-﻿using AccountManager.Dto;
-using AccountManager.Domain.Entities;
+﻿using AccountManager.Domain.Entities;
 using AccountManager.Interfaces.Repositories;
 using AccountManager.Interfaces.Services;
 
 namespace AccountManager.Services
 {
-    public class SubscriptionService : ISubscriptionService
+    /// <summary>
+    ///     Implements Subscription logic.
+    /// </summary>
+    public class SubscriptionService(ISubscriptionRepository repo) : ISubscriptionService
     {
-        private readonly ISubscriptionRepository _subscriptionRepository;
-
-        public SubscriptionService(ISubscriptionRepository subscriptionRepository)
+        public async Task<List<Subscription>> GetAllAsync()
         {
-            _subscriptionRepository = subscriptionRepository;
+            return await repo.GetAllAsync();
         }
 
-        public async Task<IEnumerable<SubscriptionDto>> GetAllSubscriptionsAsync()
+        public async Task<Subscription?> GetByIdAsync(int id)
         {
-            var subscriptions = await _subscriptionRepository.GetAllAsync();
-            return subscriptions.Select(subscription => new SubscriptionDto
-            {
-                SubscriptionId = subscription.SubscriptionId,
-                Description = subscription.Description,
-                IsActive = subscription.IsActive,
-                IsDefault = subscription.IsDefault,
-                AvailableYearly = subscription.AvailableYearly,
-                Is2FAAllowed = subscription.Is2FAAllowed,
-                IsIPFilterAllowed = subscription.IsIPFilterAllowed,
-                IsSessionTimeoutAllowed = subscription.IsSessionTimeoutAllowed
-            });
+            return await repo.GetByIdAsync(id);
         }
 
-        public async Task<SubscriptionDto?> GetSubscriptionByIdAsync(int id)
+        public async Task<Subscription> CreateAsync(Subscription subscription)
         {
-            var subscription = await _subscriptionRepository.GetByIdAsync(id);
-            if (subscription == null) return null;
-
-            return new SubscriptionDto
-            {
-                SubscriptionId = subscription.SubscriptionId,
-                Description = subscription.Description,
-                IsActive = subscription.IsActive,
-                IsDefault = subscription.IsDefault,
-                AvailableYearly = subscription.AvailableYearly,
-                Is2FAAllowed = subscription.Is2FAAllowed,
-                IsIPFilterAllowed = subscription.IsIPFilterAllowed,
-                IsSessionTimeoutAllowed = subscription.IsSessionTimeoutAllowed
-            };
+            return await repo.CreateAsync(subscription);
         }
 
-        public async Task<SubscriptionDto> CreateSubscriptionAsync(SubscriptionDto subscriptionDto)
+        public async Task<Subscription> UpdateAsync(Subscription subscription)
         {
-            var subscription = new Subscription
-            {
-                Description = subscriptionDto.Description,
-                IsActive = subscriptionDto.IsActive,
-                IsDefault = subscriptionDto.IsDefault,
-                AvailableYearly = subscriptionDto.AvailableYearly,
-                Is2FAAllowed = subscriptionDto.Is2FAAllowed,
-                IsIPFilterAllowed = subscriptionDto.IsIPFilterAllowed,
-                IsSessionTimeoutAllowed = subscriptionDto.IsSessionTimeoutAllowed
-            };
-
-            await _subscriptionRepository.CreateAsync(subscription);
-
-            return new SubscriptionDto
-            {
-                SubscriptionId = subscription.SubscriptionId,
-                Description = subscription.Description,
-                IsActive = subscription.IsActive,
-                IsDefault = subscription.IsDefault,
-                AvailableYearly = subscription.AvailableYearly,
-                Is2FAAllowed = subscription.Is2FAAllowed,
-                IsIPFilterAllowed = subscription.IsIPFilterAllowed,
-                IsSessionTimeoutAllowed = subscription.IsSessionTimeoutAllowed
-            };
+            return await repo.UpdateAsync(subscription);
         }
 
-        public async Task<bool> UpdateSubscriptionAsync(int id, SubscriptionDto subscriptionDto)
+        public async Task DeleteAsync(int id)
         {
-            var subscription = await _subscriptionRepository.GetByIdAsync(id);
-            if (subscription == null) return false;
-
-            subscription.Description = subscriptionDto.Description;
-            subscription.IsActive = subscriptionDto.IsActive;
-            subscription.IsDefault = subscriptionDto.IsDefault;
-            subscription.AvailableYearly = subscriptionDto.AvailableYearly;
-            subscription.Is2FAAllowed = subscriptionDto.Is2FAAllowed;
-            subscription.IsIPFilterAllowed = subscriptionDto.IsIPFilterAllowed;
-            subscription.IsSessionTimeoutAllowed = subscriptionDto.IsSessionTimeoutAllowed;
-
-            return await _subscriptionRepository.UpdateAsync(subscription);
-        }
-
-        public async Task<bool> DeleteSubscriptionAsync(int id)
-        {
-            return await _subscriptionRepository.DeleteAsync(id);
+            await repo.DeleteAsync(id);
         }
     }
 }

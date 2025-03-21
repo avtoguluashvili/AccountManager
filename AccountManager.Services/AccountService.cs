@@ -1,99 +1,98 @@
-﻿using AccountManager.Domain.Entities;
-using AccountManager.Dto;
-using AccountManager.Interfaces.Repositories;
+﻿using AccountManager.Interfaces.Repositories;
 using AccountManager.Interfaces.Services;
 
 namespace AccountManager.Services
 {
-    public class AccountService : IAccountService
+    /// <summary>
+    ///     Implements Account business logic.
+    /// </summary>
+    public class AccountService(
+        IAccountRepository accountRepo,
+        ISubscriptionRepository subRepo,
+        IAccountChangesLogRepository logRepo)
+        : IAccountService
     {
-        private readonly IAccountRepository _accountRepository;
-
-        public AccountService(IAccountRepository accountRepository)
+        public async Task<List<Account>> GetAllAsync()
         {
-            _accountRepository = accountRepository;
+            return await accountRepo.GetAllAsync();
         }
 
-        public async Task<IEnumerable<AccountDto>> GetAllAsync()
+        public async Task<Account?> GetByIdAsync(int id)
         {
-            var accounts = await _accountRepository.GetAllAsync();
-            return accounts.Select(a => new AccountDto
+            return await accountRepo.GetByIdAsync(id);
+        }
+
+        public async Task<Account> CreateAsync(Account newAccount, int subscriptionId)
+        {
+            var sub = await subRepo.GetByIdAsync(subscriptionId);
+            if (sub == null) throw new InvalidOperationException("Invalid subscription.");
+            var accSub = new AccountSubscription
             {
-                AccountId = a.AccountId,
-                CompanyName = a.CompanyName,
-                IsActive = a.IsActive,
-                Token = a.Token
+                SubscriptionId = sub.SubscriptionId,
+                Is2FaAllowed = sub.Is2FaAllowed,
+                IsIpFilterAllowed = sub.IsIpFilterAllowed,
+                IsSessionTimeoutAllowed = sub.IsSessionTimeoutAllowed,
+                SubscriptionStatusId = 1
+            };
+            newAccount.AccountSubscription = accSub;
+            var created = await accountRepo.CreateAsync(newAccount);
+            await logRepo.CreateAsync(new AccountChangesLog
+            {
+                AccountId = created.AccountId,
+                ChangedField = "AccountCreated",
+                OldValue = "",
+                NewValue = created.CompanyName
+            });
+            return created;
+        }
+
+        public async Task<Account> UpdateAsync(Account updatedAccount)
+        {
+            // 1) Load the existing entity from repo with AsNoTracking:
+            var existing = await accountRepo.GetByIdAsync(updatedAccount.AccountId);
+            if (existing == null)
+                throw new InvalidOperationException("Account not found.");
+
+            // 2) Compare fields to log changes:
+            if (existing.CompanyName != updatedAccount.CompanyName)
+                await logRepo.CreateAsync(new AccountChangesLog
+                {
+                    AccountId = updatedAccount.AccountId,
+                    ChangedField = "CompanyName",
+                    OldValue = existing.CompanyName,
+                    NewValue = updatedAccount.CompanyName
+                });
+            if (existing.IsActive != updatedAccount.IsActive)
+                await logRepo.CreateAsync(new AccountChangesLog
+                {
+                    AccountId = updatedAccount.AccountId,
+                    ChangedField = "IsActive",
+                    OldValue = existing.IsActive.ToString(),
+                    NewValue = updatedAccount.IsActive.ToString()
+                });
+            // (etc. for subscription changes or other fields)
+
+            // 3) Now call the repository UpdateAsync (which attaches and sets modified):
+            var saved = await accountRepo.UpdateAsync(updatedAccount);
+            return saved;
+        }
+
+
+        public async Task DeleteAsync(int accountId)
+        {
+            await accountRepo.DeleteAsync(accountId);
+            await logRepo.CreateAsync(new AccountChangesLog
+            {
+                AccountId = accountId,
+                ChangedField = "AccountDeleted",
+                OldValue = "",
+                NewValue = ""
             });
         }
 
-        public async Task<IEnumerable<AccountDto>> SearchAccountsAsync(string query)
+        public async Task<List<Account>> SearchAsync(string keyword)
         {
-            var accounts = await _accountRepository.SearchAsync(query);
-            return accounts.Select(a => new AccountDto
-            {
-                AccountId = a.AccountId,
-                CompanyName = a.CompanyName,
-                IsActive = a.IsActive,
-                Token = a.Token
-            });
-        }
-
-        public async Task<AccountDto?> GetByIdAsync(int id)
-        {
-            var account = await _accountRepository.GetByIdAsync(id);
-            if (account == null) return null;
-
-            return new AccountDto
-            {
-                AccountId = account.AccountId,
-                CompanyName = account.CompanyName,
-                IsActive = account.IsActive,
-                Token = account.Token
-            };
-        }
-
-        public async Task<AccountDto> CreateAsync(AccountDto accountDto)
-        {
-            var newAccount = new Account
-            {
-                CompanyName = accountDto.CompanyName,
-                IsActive = accountDto.IsActive,
-                Token = Guid.NewGuid().ToString()
-            };
-
-            await _accountRepository.CreateAsync(newAccount);
-            return new AccountDto
-            {
-                AccountId = newAccount.AccountId,
-                CompanyName = newAccount.CompanyName,
-                IsActive = newAccount.IsActive,
-                Token = newAccount.Token
-            };
-        }
-
-        public async Task<bool> UpdateAsync(AccountDto accountDto)
-        {
-            var account = await _accountRepository.GetByIdAsync(accountDto.AccountId);
-            if (account == null) return false;
-
-            account.CompanyName = accountDto.CompanyName;
-            account.IsActive = accountDto.IsActive;
-
-            return await _accountRepository.UpdateAsync(account);
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            return await _accountRepository.DeleteAsync(id);
-        }
-
-        public async Task<bool> ToggleIsActiveAsync(int id)
-        {
-            var account = await _accountRepository.GetByIdAsync(id);
-            if (account == null) return false;
-
-            account.IsActive = account.IsActive == 1 ? 0 : 1;
-            return await _accountRepository.UpdateAsync(account);
+            return await accountRepo.SearchAsync(keyword);
         }
     }
 }

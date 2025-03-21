@@ -1,54 +1,74 @@
-﻿using AccountManager.Domain.Entities;
+﻿using System;
+using AccountManager.Domain.Entities;
 using AccountManager.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccountManager.Repository
 {
-    public class AccountRepository : IAccountRepository
+    /// <summary>
+    ///     EF Core repository for Account.
+    /// </summary>
+    public class AccountRepository(ApplicationDbContext db) : IAccountRepository
     {
-        private readonly ApplicationDbContext _context;
-
-        public AccountRepository(ApplicationDbContext context)
+        public async Task<List<Account>> GetAllAsync()
         {
-            _context = context;
-        }
-
-        public async Task<IEnumerable<Account>> GetAllAsync()
-        {
-            return await _context.Accounts.ToListAsync();
+            return await db.Accounts
+                .AsNoTracking()
+                .Include(a => a.AccountSubscription)
+                .ThenInclude(s => s!.Subscription)
+                .Include(a => a.AccountSubscription!.AccountSubscriptionStatus)
+                .ToListAsync();
         }
 
         public async Task<Account?> GetByIdAsync(int id)
         {
-            return await _context.Accounts.FindAsync(id);
+            return await db.Accounts
+                .AsNoTracking()
+                .Include(a => a.AccountSubscription)
+                .ThenInclude(s => s!.Subscription)
+                .Include(a => a.AccountSubscription!.AccountSubscriptionStatus)
+                .FirstOrDefaultAsync(a => a.AccountId == id);
         }
 
-        public async Task<Account> CreateAsync(Account account)
+        public async Task<Account> CreateAsync(Account entity)
         {
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-            return account;
+            db.Accounts.Add(entity);
+            await db.SaveChangesAsync();
+            return entity;
         }
 
-        public async Task<bool> UpdateAsync(Account account)
+        public async Task<Account> UpdateAsync(Account entity)
         {
-            _context.Accounts.Update(account);
-            return await _context.SaveChangesAsync() > 0;
+            db.Accounts.Attach(entity);
+
+            db.Entry(entity).State = EntityState.Modified;
+
+            if (entity.AccountSubscription is not null)
+            {
+                db.AccountSubscriptions.Attach(entity.AccountSubscription);
+                db.Entry(entity.AccountSubscription).State = EntityState.Modified;
+            }
+
+            await db.SaveChangesAsync();
+            return entity;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var account = await GetByIdAsync(id);
-            if (account == null) return false;
-
-            _context.Accounts.Remove(account);
-            return await _context.SaveChangesAsync() > 0;
+            var existing = await db.Accounts.FindAsync(id);
+            if (existing != null)
+            {
+                db.Accounts.Remove(existing);
+                await db.SaveChangesAsync();
+            }
         }
 
-        public async Task<IEnumerable<Account>> SearchAsync(string query)
+        public async Task<List<Account>> SearchAsync(string keyword)
         {
-            return await _context.Accounts
-                .Where(a => a.CompanyName.Contains(query))
+            return await db.Accounts
+                .AsNoTracking()
+                .Where(a => a.CompanyName.Contains(keyword))
+                .Include(a => a.AccountSubscription)
                 .ToListAsync();
         }
     }

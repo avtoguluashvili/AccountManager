@@ -1,13 +1,17 @@
-﻿using AccountManager.Dto;
+﻿using AccountManager.Domain.Entities;
 
 namespace AccountManager.Interfaces.Services
 {
+
+    /// <summary>
+    ///     Business logic for Subscription plans.
+    /// </summary>
     public interface ISubscriptionService
     {
-        Task<IEnumerable<SubscriptionDto>> GetAllSubscriptionsAsync();
-        Task<SubscriptionDto?> GetSubscriptionByIdAsync(int id);
-        Task<SubscriptionDto> CreateSubscriptionAsync(SubscriptionDto subscriptionDto);
-        Task<bool> UpdateSubscriptionAsync(int id, SubscriptionDto subscriptionDto);
-        Task<bool> DeleteSubscriptionAsync(int id);
+        Task<List<Subscription>> GetAllAsync();
+        Task<Subscription?> GetByIdAsync(int id);
+        Task<Subscription> CreateAsync(Subscription subscription);
+        Task<Subscription> UpdateAsync(Subscription subscription);
+        Task DeleteAsync(int id);
     }
 }

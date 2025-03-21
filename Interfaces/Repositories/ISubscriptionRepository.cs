@@ -2,12 +2,15 @@
 
 namespace AccountManager.Interfaces.Repositories
 {
+    /// <summary>
+    ///     CRUD operations for Subscription plans.
+    /// </summary>
     public interface ISubscriptionRepository
     {
-        Task<IEnumerable<Subscription>> GetAllAsync();
+        Task<List<Subscription>> GetAllAsync();
         Task<Subscription?> GetByIdAsync(int id);
-        Task CreateAsync(Subscription subscription);
-        Task<bool> UpdateAsync(Subscription subscription);
-        Task<bool> DeleteAsync(int id);
+        Task<Subscription> CreateAsync(Subscription subscription);
+        Task<Subscription> UpdateAsync(Subscription subscription);
+        Task DeleteAsync(int id);
     }
 }

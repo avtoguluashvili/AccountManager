@@ -1,93 +1,51 @@
-using Microsoft.AspNetCore.Mvc;
 using AccountManager.Interfaces.Services;
-using AccountManager.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AccountManager.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    public class AccountsController(IAccountService service) : ControllerBase
     {
-        private readonly IAccountService _accountService;
-
-        public AccountController(IAccountService accountService)
-        {
-            _accountService = accountService;
-        }
-
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AccountDto>>> GetAll()
+        public async Task<ActionResult<List<Account>>> GetAll()
         {
-            var accounts = await _accountService.GetAllAsync();
-            return Ok(accounts);
+            return Ok(await service.GetAllAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AccountDto>> GetById(int id)
+        public async Task<ActionResult<Account>> GetById(int id)
         {
-            var account = await _accountService.GetByIdAsync(id);
-            if (account == null) return NotFound();
-            return Ok(account);
-        }
-
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<AccountDto>>> SearchAccounts([FromQuery] string query)
-        {
-            var accounts = await _accountService.SearchAccountsAsync(query);
-            if (accounts == null || !accounts.Any())
-                return NotFound("No matching accounts found.");
-
-            return Ok(accounts);
+            var acct = await service.GetByIdAsync(id);
+            if (acct == null) return NotFound();
+            return Ok(acct);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] AccountDto accountDto)
+        public async Task<ActionResult<Account>> Create([FromBody] Account account, [FromQuery] int subscriptionId)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var createdAccount = await _accountService.CreateAsync(accountDto);
-                return CreatedAtAction(nameof(GetById), new { id = createdAccount.AccountId }, createdAccount);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating account: {ex.Message}");
-                return StatusCode(500, "Internal server error");
-            }
+            var created = await service.CreateAsync(account, subscriptionId);
+            return CreatedAtAction(nameof(GetById), new { id = created.AccountId }, created);
         }
 
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, AccountDto accountDto)
+        public async Task<ActionResult<Account>> Update(int id, [FromBody] Account account)
         {
-            if (id != accountDto.AccountId) return BadRequest();
-
-            var updated = await _accountService.UpdateAsync(accountDto);
-            if (!updated) return NotFound();
-
-            return NoContent();
+            if (id != account.AccountId) return BadRequest();
+            return Ok(await service.UpdateAsync(account));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _accountService.DeleteAsync(id);
-            if (!deleted) return NotFound();
-
+            await service.DeleteAsync(id);
             return NoContent();
         }
 
-        [HttpPatch("{id}/toggle")]
-        public async Task<IActionResult> ToggleIsActive(int id)
+        [HttpGet("search")]
+        public async Task<ActionResult<List<Account>>> Search([FromQuery] string q)
         {
-            var updated = await _accountService.ToggleIsActiveAsync(id);
-            if (!updated) return NotFound();
-
-            return NoContent();
+            return Ok(await service.SearchAsync(q));
         }
     }
 }
