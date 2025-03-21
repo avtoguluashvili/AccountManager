@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+namespace AccountManager.Domain.Entities;
 /// <summary>
 ///     Logs changes made to an account or its subscription fields.
 /// </summary>

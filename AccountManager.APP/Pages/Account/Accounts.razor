@@ -1,6 +1,7 @@
 ﻿@page "/accounts"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@using AccountManager.Domain.Entities
 
 <div class="container my-4">
     <div class="card">
@@ -64,7 +65,7 @@
 </div>
 
 @code {
-    private List<Account>? accounts;        // The raw data from the server
+    private List<AccountManager.Domain.Entities.Account>? accounts;        // The raw data from the server
     private List<Account>? displayedAccounts;  // The filtered/sorted subset
     private string searchTerm = "";
     private string errorMessage = "";

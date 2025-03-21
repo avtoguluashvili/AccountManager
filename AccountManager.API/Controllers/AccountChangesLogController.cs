@@ -1,5 +1,8 @@
-﻿using AccountManager.Interfaces.Services;
+﻿using AccountManager.Domain.Entities;
+using AccountManager.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+
+namespace AccountManager.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

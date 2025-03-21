@@ -1,4 +1,6 @@
 ﻿
+using AccountManager.Domain.Entities;
+
 namespace AccountManager.Interfaces.Services
 {
     /// <summary>

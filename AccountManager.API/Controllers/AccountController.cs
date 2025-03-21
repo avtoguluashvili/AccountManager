@@ -1,3 +1,4 @@
+using AccountManager.Domain.Entities;
 using AccountManager.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 

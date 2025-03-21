@@ -1,4 +1,5 @@
-﻿using AccountManager.Interfaces.Repositories;
+﻿using AccountManager.Domain.Entities;
+using AccountManager.Interfaces.Repositories;
 using AccountManager.Interfaces.Services;
 
 namespace AccountManager.Services

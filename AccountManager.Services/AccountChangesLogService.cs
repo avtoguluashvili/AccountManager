@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AccountManager.Domain.Entities;
 using AccountManager.Interfaces.Repositories;
 using AccountManager.Interfaces.Services;
-using AccountManager.Repository;
 
 namespace AccountManager.Services
 {

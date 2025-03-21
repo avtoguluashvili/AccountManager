@@ -1,4 +1,6 @@
-﻿namespace AccountManager.Interfaces.Repositories
+﻿using AccountManager.Domain.Entities;
+
+namespace AccountManager.Interfaces.Repositories
 {
     public interface IAccountRepository
     {
