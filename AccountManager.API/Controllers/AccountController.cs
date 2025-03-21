@@ -24,9 +24,20 @@ namespace AccountManager.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Account>> Create([FromBody] Account account, [FromQuery] int subscriptionId)
         {
-            var created = await service.CreateAsync(account, subscriptionId);
-            return CreatedAtAction(nameof(GetById), new { id = created.AccountId }, created);
+            if (subscriptionId <= 0)
+                return BadRequest("Invalid subscription ID.");
+
+            try
+            {
+                var created = await service.CreateAsync(account, subscriptionId);
+                return CreatedAtAction(nameof(GetById), new { id = created.AccountId }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
+
 
         [HttpPut("{id}")]
         public async Task<ActionResult<Account>> Update(int id, [FromBody] Account account)

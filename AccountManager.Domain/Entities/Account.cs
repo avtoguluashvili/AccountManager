@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 /// <summary>
 ///     Represents a customer or client account.
 /// </summary>
 public class Account
 {
-    [Key] public int AccountId { get; set; }
-
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int AccountId { get; set; }
     public string Token { get; set; } = Guid.NewGuid().ToString();
     public bool IsActive { get; set; }
     public string CompanyName { get; set; } = string.Empty;

@@ -24,8 +24,14 @@ namespace AccountManager.Services
 
         public async Task<Account> CreateAsync(Account newAccount, int subscriptionId)
         {
+            var existingAccount = await accountRepo.GetByIdAsync(newAccount.AccountId);
+            if (existingAccount != null)
+                throw new InvalidOperationException("Account already exists.");
+
             var sub = await subRepo.GetByIdAsync(subscriptionId);
-            if (sub == null) throw new InvalidOperationException("Invalid subscription.");
+            if (sub == null)
+                throw new InvalidOperationException("Invalid subscription.");
+
             var accSub = new AccountSubscription
             {
                 SubscriptionId = sub.SubscriptionId,
@@ -46,14 +52,13 @@ namespace AccountManager.Services
             return created;
         }
 
+
         public async Task<Account> UpdateAsync(Account updatedAccount)
         {
-            // 1) Load the existing entity from repo with AsNoTracking:
             var existing = await accountRepo.GetByIdAsync(updatedAccount.AccountId);
             if (existing == null)
                 throw new InvalidOperationException("Account not found.");
 
-            // 2) Compare fields to log changes:
             if (existing.CompanyName != updatedAccount.CompanyName)
                 await logRepo.CreateAsync(new AccountChangesLog
                 {
@@ -70,9 +75,6 @@ namespace AccountManager.Services
                     OldValue = existing.IsActive.ToString(),
                     NewValue = updatedAccount.IsActive.ToString()
                 });
-            // (etc. for subscription changes or other fields)
-
-            // 3) Now call the repository UpdateAsync (which attaches and sets modified):
             var saved = await accountRepo.UpdateAsync(updatedAccount);
             return saved;
         }
