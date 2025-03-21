@@ -1,4 +1,5 @@
 ﻿@page "/logs"
+@using System.Timers
 @using AccountManager.Domain.Entities
 @inject HttpClient Http
 
@@ -8,7 +9,7 @@
             <h3 class="mb-0">Account Changes Log</h3>
         </div>
         <div class="card-body">
-            @if (logs == null)
+            @if (_logs == null)
             {
                 <p>Loading...</p>
             }
@@ -20,41 +21,41 @@
                         <input class="form-control"
                                placeholder="Search by changed field..."
                                @oninput="OnSearchChanged"
-                               value="@searchTerm" />
+                               value="@_searchTerm"/>
                     </div>
                 </div>
 
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
-                        <tr>
-                            <th @onclick="() => SortByColumn(nameof(AccountChangesLog.LogId))" style="cursor:pointer">
-                                LogId @SortIcon(nameof(AccountChangesLog.LogId))
-                            </th>
-                            <th @onclick="() => SortByColumn(nameof(AccountChangesLog.AccountId))" style="cursor:pointer">
-                                AccountId @SortIcon(nameof(AccountChangesLog.AccountId))
-                            </th>
-                            <th @onclick="() => SortByColumn(nameof(AccountChangesLog.ChangedField))" style="cursor:pointer">
-                                Changed Field @SortIcon(nameof(AccountChangesLog.ChangedField))
-                            </th>
-                            <th>Old Value</th>
-                            <th>New Value</th>
-                            <th @onclick="() => SortByColumn(nameof(AccountChangesLog.Timestamp))" style="cursor:pointer">
-                                Timestamp (UTC) @SortIcon(nameof(AccountChangesLog.Timestamp))
-                            </th>
-                        </tr>
+                    <tr>
+                        <th @onclick="() => SortByColumn(nameof(AccountChangesLog.LogId))" style="cursor:pointer">
+                            LogId @SortIcon(nameof(AccountChangesLog.LogId))
+                        </th>
+                        <th @onclick="() => SortByColumn(nameof(AccountChangesLog.AccountId))" style="cursor:pointer">
+                            AccountId @SortIcon(nameof(AccountChangesLog.AccountId))
+                        </th>
+                        <th @onclick="() => SortByColumn(nameof(AccountChangesLog.ChangedField))" style="cursor:pointer">
+                            Changed Field @SortIcon(nameof(AccountChangesLog.ChangedField))
+                        </th>
+                        <th>Old Value</th>
+                        <th>New Value</th>
+                        <th @onclick="() => SortByColumn(nameof(AccountChangesLog.Timestamp))" style="cursor:pointer">
+                            Timestamp (UTC) @SortIcon(nameof(AccountChangesLog.Timestamp))
+                        </th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var log in displayedLogs)
-                        {
-                            <tr>
-                                <td>@log.LogId</td>
-                                <td>@log.AccountId</td>
-                                <td>@log.ChangedField</td>
-                                <td>@log.OldValue</td>
-                                <td>@log.NewValue</td>
-                                <td>@log.Timestamp</td>
-                            </tr>
-                        }
+                    @foreach (var log in _displayedLogs!)
+                    {
+                        <tr>
+                            <td>@log.LogId</td>
+                            <td>@log.AccountId</td>
+                            <td>@log.ChangedField</td>
+                            <td>@log.OldValue</td>
+                            <td>@log.NewValue</td>
+                            <td>@log.Timestamp</td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             }
@@ -63,28 +64,28 @@
 </div>
 
 @code {
-    private List<AccountChangesLog>? logs;
-    private List<AccountChangesLog>? displayedLogs;
-    private string searchTerm = "";
+    private List<AccountChangesLog>? _logs;
+    private List<AccountChangesLog>? _displayedLogs;
+    private string _searchTerm = "";
 
-    private string sortColumn = nameof(AccountChangesLog.LogId);
-    private bool sortAscending = true;
+    private string _sortColumn = nameof(AccountChangesLog.LogId);
+    private bool _sortAscending = true;
 
-    private System.Timers.Timer? _searchTimer;
+    private Timer? _searchTimer;
     private const int SearchDelay = 400; // ms
 
     protected override async Task OnInitializedAsync()
     {
-        logs = await Http.GetFromJsonAsync<List<AccountChangesLog>>("api/AccountChangesLog");
-        displayedLogs = logs?.ToList() ?? new List<AccountChangesLog>();
+        _logs = await Http.GetFromJsonAsync<List<AccountChangesLog>>("api/AccountChangesLog");
+        _displayedLogs = _logs?.ToList() ?? new List<AccountChangesLog>();
     }
 
     private void OnSearchChanged(ChangeEventArgs e)
     {
-        searchTerm = e.Value?.ToString() ?? "";
+        _searchTerm = e.Value?.ToString() ?? "";
         _searchTimer?.Stop();
-        _searchTimer = new System.Timers.Timer(SearchDelay);
-        _searchTimer.Elapsed += async (s, e) =>
+        _searchTimer = new Timer(SearchDelay);
+        _searchTimer.Elapsed += async (_, _) =>
         {
             _searchTimer?.Stop();
             await InvokeAsync(() =>
@@ -98,55 +99,59 @@
 
     private void SortByColumn(string col)
     {
-        if (sortColumn == col)
-            sortAscending = !sortAscending;
+        if (_sortColumn == col)
+            _sortAscending = !_sortAscending;
         else
         {
-            sortColumn = col;
-            sortAscending = true;
+            _sortColumn = col;
+            _sortAscending = true;
         }
+
         ApplySortAndFilter();
     }
 
     private void ApplySortAndFilter()
     {
-        if (logs == null) return;
-        IEnumerable<AccountChangesLog> query = logs;
+        if (_logs == null) return;
+        IEnumerable<AccountChangesLog> query = _logs;
 
         // Filter
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
-            query = query.Where(l => l.ChangedField != null &&
-                                     l.ChangedField.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(l => l.ChangedField.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         // Sort
-        query = sortColumn switch
+        query = _sortColumn switch
         {
-            nameof(AccountChangesLog.AccountId) => sortAscending
+            nameof(AccountChangesLog.AccountId) => _sortAscending
                 ? query.OrderBy(l => l.AccountId)
                 : query.OrderByDescending(l => l.AccountId),
-            nameof(AccountChangesLog.ChangedField) => sortAscending
+            nameof(AccountChangesLog.ChangedField) => _sortAscending
                 ? query.OrderBy(l => l.ChangedField)
                 : query.OrderByDescending(l => l.ChangedField),
-            nameof(AccountChangesLog.Timestamp) => sortAscending
+            nameof(AccountChangesLog.Timestamp) => _sortAscending
                 ? query.OrderBy(l => l.Timestamp)
                 : query.OrderByDescending(l => l.Timestamp),
             _ => // default: LogId
-                sortAscending
-                ? query.OrderBy(l => l.LogId)
-                : query.OrderByDescending(l => l.LogId),
+                _sortAscending
+                    ? query.OrderBy(l => l.LogId)
+                    : query.OrderByDescending(l => l.LogId)
         };
 
-        displayedLogs = query.ToList();
+        _displayedLogs = query.ToList();
     }
 
-    private RenderFragment SortIcon(string column) => builder =>
+    private RenderFragment SortIcon(string column)
     {
-        if (sortColumn == column)
+        return builder =>
         {
-            var icon = sortAscending ? "▲" : "▼";
-            builder.AddContent(0, icon);
-        }
-    };
+            if (_sortColumn == column)
+            {
+                var icon = _sortAscending ? "▲" : "▼";
+                builder.AddContent(0, icon);
+            }
+        };
+    }
+
 }

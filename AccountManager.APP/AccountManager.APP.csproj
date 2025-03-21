@@ -13,9 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AccountManager.Domain\AccountManager.Domain.csproj" />
-    <ProjectReference Include="..\AccountManager.Repository\AccountManager.Repository.csproj" />
-    <ProjectReference Include="..\AccountManager.Services\AccountManager.Services.csproj" />
-    <ProjectReference Include="..\Interfaces\AccountManager.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

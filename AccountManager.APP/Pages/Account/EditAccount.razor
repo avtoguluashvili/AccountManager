@@ -9,39 +9,39 @@
             <h3 class="card-title mb-0">Edit Account</h3>
         </div>
         <div class="card-body">
-            @if (!string.IsNullOrEmpty(errorMessage))
+            @if (!string.IsNullOrEmpty(_errorMessage))
             {
-                <div class="alert alert-danger">@errorMessage</div>
+                <div class="alert alert-danger">@_errorMessage</div>
             }
-            @if (account == null || subscriptions == null || statuses == null)
+            @if (_account == null || _subscriptions == null || _statuses == null)
             {
                 <p>Loading...</p>
             }
             else
             {
-                <EditForm Model="@account" OnValidSubmit="@SaveChanges">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+                <EditForm Model="@_account" OnValidSubmit="@SaveChanges">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
 
                     <div class="mb-3">
                         <label class="form-label">Company Name</label>
-                        <InputText class="form-control" @bind-Value="account.CompanyName" />
-                        <ValidationMessage For="@(() => account.CompanyName)" />
+                        <InputText class="form-control" @bind-Value="_account.CompanyName"/>
+                        <ValidationMessage For="@(() => _account.CompanyName)"/>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Country</label>
-                        <InputText class="form-control" @bind-Value="account.Country" />
+                        <InputText class="form-control" @bind-Value="_account.Country"/>
                     </div>
                     <div class="mb-3 form-check">
-                        <InputCheckbox class="form-check-input" @bind-Value="account.IsActive" />
+                        <InputCheckbox class="form-check-input" @bind-Value="_account.IsActive"/>
                         <label class="form-check-label ms-2">Active?</label>
                     </div>
 
                     <!-- Subscription dropdown -->
                     <div class="mb-3">
                         <label class="form-label">Subscription Plan</label>
-                        <select class="form-select" @bind="account.AccountSubscription.SubscriptionId">
-                            @foreach (var s in subscriptions)
+                        <select class="form-select" @bind="_account.AccountSubscription!.SubscriptionId">
+                            @foreach (var s in _subscriptions)
                             {
                                 <option value="@s.SubscriptionId">@s.Description</option>
                             }
@@ -51,8 +51,8 @@
                     <!-- Subscription Status dropdown -->
                     <div class="mb-3">
                         <label class="form-label">Subscription Status</label>
-                        <select class="form-select" @bind="account.AccountSubscription.SubscriptionStatusId">
-                            @foreach (var st in statuses)
+                        <select class="form-select" @bind="_account.AccountSubscription.SubscriptionStatusId">
+                            @foreach (var st in _statuses)
                             {
                                 <option value="@st.SubscriptionStatusId">@st.Description</option>
                             }
@@ -61,35 +61,35 @@
 
                     <div class="mb-3 form-check">
                         <InputCheckbox class="form-check-input"
-                                       @bind-Value="account.AccountSubscription.Is2FaAllowed" />
+                                       @bind-Value="_account.AccountSubscription.Is2FaAllowed"/>
                         <label class="form-check-label ms-2">Allow 2FA?</label>
                     </div>
                     <div class="mb-3 form-check">
                         <InputCheckbox class="form-check-input"
-                                       @bind-Value="account.AccountSubscription.IsIpFilterAllowed" />
+                                       @bind-Value="_account.AccountSubscription.IsIpFilterAllowed"/>
                         <label class="form-check-label ms-2">Allow IP Filtering?</label>
                     </div>
                     <div class="mb-3 form-check">
                         <InputCheckbox class="form-check-input"
-                                       @bind-Value="account.AccountSubscription.IsSessionTimeoutAllowed" />
+                                       @bind-Value="_account.AccountSubscription.IsSessionTimeoutAllowed"/>
                         <label class="form-check-label ms-2">Allow Session Timeout?</label>
                     </div>
 
                     <div class="mb-3 form-check">
-                        <InputCheckbox class="form-check-input" @bind-Value="account.Is2FAEnabled" />
+                        <InputCheckbox class="form-check-input" @bind-Value="_account.Is2FaEnabled"/>
                         <label class="form-check-label ms-2">2FA Enabled for this account?</label>
                     </div>
                     <div class="mb-3 form-check">
-                        <InputCheckbox class="form-check-input" @bind-Value="account.IsIPFilterEnabled" />
+                        <InputCheckbox class="form-check-input" @bind-Value="_account.IsIpFilterEnabled"/>
                         <label class="form-check-label ms-2">IP Filter Enabled for this account?</label>
                     </div>
                     <div class="mb-3 form-check">
-                        <InputCheckbox class="form-check-input" @bind-Value="account.IsSessionTimeoutEnabled" />
+                        <InputCheckbox class="form-check-input" @bind-Value="_account.IsSessionTimeoutEnabled"/>
                         <label class="form-check-label ms-2">Session Timeout Enabled?</label>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Session Timeout (minutes)</label>
-                        <InputNumber class="form-control" @bind-Value="account.SessionTimeOut" />
+                        <InputNumber class="form-control" @bind-Value="_account.SessionTimeOut"/>
                     </div>
 
                     <div class="text-end">
@@ -103,44 +103,44 @@
 </div>
 
 @code {
-    [Parameter] public int id { get; set; }
-    private Account? account;
-    private List<Subscription>? subscriptions;
-    private List<AccountSubscriptionStatus>? statuses;
-    private string errorMessage = "";
+    [Parameter] public int Id { get; set; }
+    private Account? _account;
+    private List<Subscription>? _subscriptions;
+    private List<AccountSubscriptionStatus>? _statuses;
+    private string _errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             // Load account
-            account = await Http.GetFromJsonAsync<Account>($"api/Accounts/{id}");
+            _account = await Http.GetFromJsonAsync<Account>($"api/Accounts/{Id}");
             // Load all subscriptions
-            subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
+            _subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
             // Load subscription statuses
-            statuses = await Http.GetFromJsonAsync<List<AccountSubscriptionStatus>>("api/AccountSubscriptionStatus");
+            _statuses = await Http.GetFromJsonAsync<List<AccountSubscriptionStatus>>("api/AccountSubscriptionStatus");
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            _errorMessage = ex.Message;
         }
     }
 
     private async Task SaveChanges()
     {
-        if (account == null) return;
+        if (_account == null) return;
         try
         {
-            errorMessage = "";
-            var resp = await Http.PutAsJsonAsync($"api/Accounts/{id}", account);
+            _errorMessage = "";
+            var resp = await Http.PutAsJsonAsync($"api/Accounts/{Id}", _account);
             if (resp.IsSuccessStatusCode)
                 Nav.NavigateTo("/accounts");
             else
-                errorMessage = await resp.Content.ReadAsStringAsync();
+                _errorMessage = await resp.Content.ReadAsStringAsync();
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            _errorMessage = ex.Message;
         }
     }
 
@@ -148,4 +148,5 @@
     {
         Nav.NavigateTo("/accounts");
     }
+
 }

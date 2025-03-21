@@ -1,8 +1,8 @@
-﻿using AccountManager.Domain.Entities;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AccountManager.Domain.Entities;
+
 public class AccountSubscription
 {
     /// <summary>

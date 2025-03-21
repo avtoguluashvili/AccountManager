@@ -2,50 +2,49 @@
 using AccountManager.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace AccountManager.Repository
+namespace AccountManager.Repository;
+
+public class SubscriptionRepository(ApplicationDbContext db) : ISubscriptionRepository
 {
-    public class SubscriptionRepository(ApplicationDbContext db) : ISubscriptionRepository
+    public async Task<List<Subscription>> GetAllAsync()
     {
-        public async Task<List<Subscription>> GetAllAsync()
-        {
-            // No-tracking for read queries
-            return await db.Subscriptions
-                .AsNoTracking()
-                .ToListAsync();
-        }
+        // No-tracking for read queries
+        return await db.Subscriptions
+            .AsNoTracking()
+            .ToListAsync();
+    }
 
-        public async Task<Subscription?> GetByIdAsync(int id)
-        {
-            return await db.Subscriptions
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.SubscriptionId == id);
-        }
+    public async Task<Subscription?> GetByIdAsync(int id)
+    {
+        return await db.Subscriptions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.SubscriptionId == id);
+    }
 
-        public async Task<Subscription> CreateAsync(Subscription subscription)
+    public async Task<Subscription> CreateAsync(Subscription subscription)
+    {
+        db.Subscriptions.Add(subscription);
+        await db.SaveChangesAsync();
+        return subscription;
+    }
+
+    public async Task<Subscription> UpdateAsync(Subscription subscription)
+    {
+        // Attach the incoming subscription so we can update it
+        db.Subscriptions.Attach(subscription);
+        db.Entry(subscription).State = EntityState.Modified;
+
+        await db.SaveChangesAsync();
+        return subscription;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var existing = await db.Subscriptions.FindAsync(id);
+        if (existing != null)
         {
-            db.Subscriptions.Add(subscription);
+            db.Subscriptions.Remove(existing);
             await db.SaveChangesAsync();
-            return subscription;
-        }
-
-        public async Task<Subscription> UpdateAsync(Subscription subscription)
-        {
-            // Attach the incoming subscription so we can update it
-            db.Subscriptions.Attach(subscription);
-            db.Entry(subscription).State = EntityState.Modified;
-
-            await db.SaveChangesAsync();
-            return subscription;
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var existing = await db.Subscriptions.FindAsync(id);
-            if (existing != null)
-            {
-                db.Subscriptions.Remove(existing);
-                await db.SaveChangesAsync();
-            }
         }
     }
 }

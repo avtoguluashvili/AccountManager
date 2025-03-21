@@ -11,11 +11,11 @@
             <button class="btn btn-light btn-sm" @onclick="CreateNew">Create New</button>
         </div>
         <div class="card-body">
-            @if (!string.IsNullOrEmpty(errorMessage))
+            @if (!string.IsNullOrEmpty(_errorMessage))
             {
-                <div class="alert alert-danger">@errorMessage</div>
+                <div class="alert alert-danger">@_errorMessage</div>
             }
-            @if (subscriptions == null)
+            @if (_subscriptions == null)
             {
                 <p>Loading...</p>
             }
@@ -26,7 +26,7 @@
                         <input class="form-control"
                                placeholder="Search..."
                                @oninput="OnSearchChanged"
-                               value="@searchTerm"/>
+                               value="@_searchTerm"/>
                     </div>
                 </div>
 
@@ -46,7 +46,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var s in displayedSubscriptions)
+                    @foreach (var s in _displayedSubscriptions!)
                     {
                         <tr>
                             <td>@s.SubscriptionId</td>
@@ -66,13 +66,13 @@
 </div>
 
 @code {
-    private List<Subscription>? subscriptions;
-    private List<Subscription>? displayedSubscriptions;
-    private string errorMessage = "";
-    private string searchTerm = "";
+    private List<Subscription>? _subscriptions;
+    private List<Subscription>? _displayedSubscriptions;
+    private string _errorMessage = "";
+    private string _searchTerm = "";
 
-    private string sortColumn = nameof(Subscription.SubscriptionId);
-    private bool sortAscending = true;
+    private string _sortColumn = nameof(Subscription.SubscriptionId);
+    private bool _sortAscending = true;
 
     private Timer? _searchTimer;
     private const int SearchDelay = 400;
@@ -81,21 +81,21 @@
     {
         try
         {
-            subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
-            displayedSubscriptions = subscriptions?.ToList() ?? new List<Subscription>();
+            _subscriptions = await Http.GetFromJsonAsync<List<Subscription>>("api/Subscription");
+            _displayedSubscriptions = _subscriptions?.ToList() ?? new List<Subscription>();
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            _errorMessage = ex.Message;
         }
     }
 
     private void OnSearchChanged(ChangeEventArgs e)
     {
-        searchTerm = e.Value?.ToString() ?? "";
+        _searchTerm = e.Value?.ToString() ?? "";
         _searchTimer?.Stop();
         _searchTimer = new Timer(SearchDelay);
-        _searchTimer.Elapsed += async (s, e) =>
+        _searchTimer.Elapsed += async (_, _) =>
         {
             _searchTimer?.Stop();
             await InvokeAsync(() =>
@@ -109,12 +109,12 @@
 
     private void SortByColumn(string col)
     {
-        if (sortColumn == col)
-            sortAscending = !sortAscending;
+        if (_sortColumn == col)
+            _sortAscending = !_sortAscending;
         else
         {
-            sortColumn = col;
-            sortAscending = true;
+            _sortColumn = col;
+            _sortAscending = true;
         }
 
         ApplySortAndFilter();
@@ -122,41 +122,40 @@
 
     private void ApplySortAndFilter()
     {
-        if (subscriptions == null) return;
-        IEnumerable<Subscription> query = subscriptions;
+        if (_subscriptions == null) return;
+        IEnumerable<Subscription> query = _subscriptions;
 
         // Filter
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
-            query = query.Where(s => s.Description != null &&
-                                     s.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(s => s.Description.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         // Sort
-        query = sortColumn switch
+        query = _sortColumn switch
         {
-            nameof(Subscription.Description) => sortAscending
+            nameof(Subscription.Description) => _sortAscending
                 ? query.OrderBy(s => s.Description)
                 : query.OrderByDescending(s => s.Description),
-            nameof(Subscription.IsDefault) => sortAscending
+            nameof(Subscription.IsDefault) => _sortAscending
                 ? query.OrderBy(s => s.IsDefault)
                 : query.OrderByDescending(s => s.IsDefault),
             _ => // SubscriptionId
-                sortAscending
+                _sortAscending
                     ? query.OrderBy(s => s.SubscriptionId)
                     : query.OrderByDescending(s => s.SubscriptionId)
         };
 
-        displayedSubscriptions = query.ToList();
+        _displayedSubscriptions = query.ToList();
     }
 
     private RenderFragment SortIcon(string column)
     {
         return builder =>
         {
-            if (sortColumn == column)
+            if (_sortColumn == column)
             {
-                var icon = sortAscending ? "▲" : "▼";
+                var icon = _sortAscending ? "▲" : "▼";
                 builder.AddContent(0, icon);
             }
         };
@@ -179,20 +178,20 @@
             var resp = await Http.DeleteAsync($"api/Subscription/{id}");
             if (!resp.IsSuccessStatusCode)
             {
-                errorMessage = await resp.Content.ReadAsStringAsync();
+                _errorMessage = await resp.Content.ReadAsStringAsync();
                 return;
             }
 
-            var idx = subscriptions!.FindIndex(x => x.SubscriptionId == id);
+            var idx = _subscriptions!.FindIndex(x => x.SubscriptionId == id);
             if (idx >= 0)
             {
-                subscriptions.RemoveAt(idx);
+                _subscriptions.RemoveAt(idx);
                 ApplySortAndFilter();
             }
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            _errorMessage = ex.Message;
         }
     }
 
